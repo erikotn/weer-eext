@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weerstation Eext | Live</title>
+    <title>Weerstation Eext | Actueel</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/869/869869.png" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -19,13 +19,11 @@
         .live-badge { background: #ffeef0; color: #d73a49; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
         .date-display { color: #57606a; font-size: 0.85rem; margin-top: 8px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
-        .stat-tile { background: rgba(248, 250, 252, 0.8); padding: 15px; border-radius: 16px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
-        .stat-tile:hover { border-color: var(--accent-green); background: #fff; }
-        .stat-tile.active { border-color: var(--accent-green); background: #f0f9f6; }
+        .stat-tile { background: rgba(248, 250, 252, 0.8); padding: 15px; border-radius: 16px; border: 2px solid transparent; }
         .stat-label { font-size: 0.7rem; color: #57606a; display: block; text-transform: uppercase; font-weight: 600; }
         .stat-value { font-size: 1.4rem; font-weight: bold; margin-top: 4px; display: block; }
         .extremes { font-size: 0.75rem; color: #8b949e; margin-top: 4px; }
-        .chart-container { margin-top: 20px; height: 200px; position: relative; }
+        .chart-container { margin-top: 20px; height: 180px; }
         .whatsapp-btn { background: #25d366; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: 12px; font-weight: 600; margin-top: 20px; }
     </style>
 </head>
@@ -37,25 +35,25 @@
             <div id="currentDate" class="date-display">Laden...</div>
         </header>
         <div class="grid">
-            <div id="tile-temp" class="stat-tile active" onclick="updateView('temp', event)">
+            <div class="stat-tile">
                 <span class="stat-label">🌡️ Temperatuur</span>
                 <span id="temp" class="stat-value">--.-°C</span>
-                <div class="extremes">Min: <span id="minTemp">--</span>° | Max: <span id="maxTemp">--</span>°</div>
+                <div class="extremes">Gevoel: <span id="feelsLike">--</span>°C</div>
             </div>
-            <div id="tile-wind" class="stat-tile" onclick="updateView('wind', event)">
+            <div class="stat-tile">
                 <span class="stat-label">💨 Wind</span>
                 <span id="wind" class="stat-value">-- km/u</span>
                 <div class="extremes"><span id="windDir">--</span> | Stoot: <span id="windGust">--</span></div>
             </div>
-            <div id="tile-hum" class="stat-tile" onclick="updateView('hum', event)">
+            <div class="stat-tile">
                 <span class="stat-label">💧 Vochtigheid</span>
                 <span id="hum" class="stat-value">--%</span>
                 <div class="extremes">Dauwpunt: <span id="dewPoint">--</span>°</div>
             </div>
-            <div id="tile-rain" class="stat-tile" onclick="updateView('rain', event)">
+            <div id="tile-rain" class="stat-tile">
                 <span class="stat-label">🌧️ Regen</span>
                 <span id="rain" class="stat-value">-- mm</span>
-                <div class="extremes">Totaal vandaag</div>
+                <div class="extremes">Vandaag totaal</div>
             </div>
         </div>
         <div class="chart-container"><canvas id="weatherChart"></canvas></div>
@@ -66,8 +64,8 @@
     const apiKey = 'b48a666b596749648a666b5967396428';
     const stationId = 'IEEXT9';
     let weatherChart;
-    let historyData = [];
-    let currentView = 'temp';
+    let liveTrendData = [];
+    let liveLabels = [];
 
     function getRoundedTime() {
         const now = new Date();
@@ -80,21 +78,20 @@
     }
 
     function degToCompass(num) {
-        const val = Math.floor((num / 22.5) + 0.5);
         const arr = ["N", "NNO", "NO", "ONO", "O", "OZO", "ZO", "ZZO", "Z", "ZZW", "ZW", "WZW", "W", "WNW", "NW", "NNW"];
-        return arr[(val % 16)];
+        return arr[(Math.floor((num / 22.5) + 0.5) % 16)];
     }
 
-    async function fetchAllData() {
+    async function fetchUpdate() {
         try {
-            // 1. Live Data
-            const liveRes = await fetch(`https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
-            const liveJson = await liveRes.json();
-            if(!liveJson.observations) return;
-            const obs = liveJson.observations[0];
+            const res = await fetch(`https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
+            const json = await res.json();
+            if(!json.observations) return;
+            const obs = json.observations[0];
             const t = obs.metric.temp;
 
             document.getElementById('temp').innerText = t.toFixed(1) + '°C';
+            document.getElementById('feelsLike').innerText = obs.metric.windChill !== null ? obs.metric.windChill.toFixed(1) : t.toFixed(1);
             document.getElementById('wind').innerText = obs.metric.windSpeed + ' km/u';
             document.getElementById('windGust').innerText = obs.metric.windGust + ' km/u';
             document.getElementById('windDir').innerText = degToCompass(obs.winddir);
@@ -103,61 +100,29 @@
             document.getElementById('rain').innerText = obs.metric.precipTotal + ' mm';
 
             const body = document.getElementById('bodyTag');
-            body.className = ''; 
-            if (t < 10) body.classList.add('weather-cold');
-            else if (t < 18) body.classList.add('weather-mild');
-            else body.classList.add('weather-warm');
+            body.className = t < 10 ? 'weather-cold' : (t < 18 ? 'weather-mild' : 'weather-warm');
 
             document.getElementById('currentDate').innerText = `${new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })} | ${getRoundedTime()}`;
 
-            // 2. Historie Data - We proberen nu specifiek de datum van vandaag
-            const today = new Date().toISOString().slice(0,10).replace(/-/g,"");
-            const histRes = await fetch(`https://api.weather.com/v2/pws/observations/all/1day?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
-            const histJson = await histRes.json();
+            // Update live grafiek (Trend)
+            const nowTime = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+            liveTrendData.push(t);
+            liveLabels.push(nowTime);
+            if(liveTrendData.length > 20) { liveTrendData.shift(); liveLabels.shift(); }
             
-            if (histJson && histJson.observations) {
-                historyData = histJson.observations;
-                const temps = historyData.map(o => o.metric.temp);
-                document.getElementById('maxTemp').innerText = Math.max(...temps).toFixed(1);
-                document.getElementById('minTemp').innerText = Math.min(...temps).toFixed(1);
-                updateChart(currentView);
-            }
-            
-            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${encodeURIComponent('Weer in Eext: ' + t.toFixed(1) + '°C. Check eextweer.nl')}`;
-        } catch (e) { console.error("API Error:", e); }
-    }
+            weatherChart.data.labels = liveLabels;
+            weatherChart.data.datasets[0].data = liveTrendData;
+            weatherChart.update();
 
-    function updateView(type, event) {
-        currentView = type;
-        document.querySelectorAll('.stat-tile').forEach(t => t.classList.remove('active'));
-        if(event) event.currentTarget.classList.add('active');
-        updateChart(type);
-    }
-
-    function updateChart(type) {
-        if (!weatherChart || historyData.length === 0) return;
-        const step = Math.max(1, Math.floor(historyData.length / 15));
-        const sample = historyData.filter((_, i) => i % step === 0);
-        
-        weatherChart.data.labels = sample.map(o => new Date(o.obsTimeLocal).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
-        
-        if(type === 'temp') weatherChart.data.datasets[0].data = sample.map(o => o.metric.temp);
-        else if(type === 'wind') weatherChart.data.datasets[0].data = sample.map(o => o.metric.windSpeed);
-        else if(type === 'hum') weatherChart.data.datasets[0].data = sample.map(o => o.humidity);
-        else if(type === 'rain') weatherChart.data.datasets[0].data = sample.map(o => o.metric.precipTotal);
-
-        weatherChart.update('none');
+            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${encodeURIComponent('Weer in Eext: ' + t.toFixed(1) + '°C. Zie eextweer.nl')}`;
+        } catch (e) { console.error(e); }
     }
 
     const ctx = document.getElementById('weatherChart').getContext('2d');
-    weatherChart = new Chart(ctx, { 
-        type: 'line', 
-        data: { datasets: [{ borderColor: '#52a48e', backgroundColor: 'rgba(82, 164, 142, 0.1)', fill: true, tension: 0.3, borderWidth: 3, pointRadius: 3, pointBackgroundColor: '#52a48e' }] }, 
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false } } } 
-    });
-
-    fetchAllData();
-    setInterval(fetchAllData, 300000);
+    weatherChart = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [{ label: 'Trend °C', borderColor: '#52a48e', backgroundColor: 'rgba(82, 164, 142, 0.1)', fill: true, tension: 0.3, data: [] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+    
+    fetchUpdate();
+    setInterval(fetchUpdate, 300000);
 </script>
 </body>
 </html>
