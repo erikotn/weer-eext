@@ -3,133 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weerstation Eext | Actuele Weergegevens IEEXT9</title>
+    <title>Weerstation Eext | Live Data</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/869/869869.png" type="image/x-icon">
-    
-    <meta name="description" content="Bekijk het actuele weer in Eext. Live temperatuur, wind en neerslag van weerstation IEEXT9.">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg-color: #f0f2f5;
-            --card-bg: rgba(255, 255, 255, 0.95);
-            --text-main: #1c2128;
-            --accent-green: #52a48e; 
-            --border: #e1e4e8;
-        }
-
-        body { 
-            font-family: -apple-system, system-ui, sans-serif; 
-            background: var(--bg-color);
-            transition: background 1.5s ease;
-            color: var(--text-main); 
-            padding: 20px; 
-            margin: 0;
-            min-height: 100vh;
-        }
-
+        :root { --bg-color: #f0f2f5; --card-bg: rgba(255, 255, 255, 0.95); --text-main: #1c2128; --accent-green: #52a48e; --border: #e1e4e8; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); transition: background 1.5s ease; color: var(--text-main); padding: 20px; margin: 0; min-height: 100vh; }
         .weather-cold { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
         .weather-mild { background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%); }
         .weather-warm { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); }
-
         .container { max-width: 550px; margin: auto; }
-
-        .main-card {
-            background: var(--card-bg);
-            border-radius: 24px;
-            padding: 25px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-            border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
-        }
-
+        .main-card { background: var(--card-bg); border-radius: 24px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: 1px solid var(--border); backdrop-filter: blur(10px); }
         header { border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; }
         h1 { font-size: 1.5rem; margin: 0; display: flex; align-items: center; justify-content: space-between; }
         .live-badge { background: #ffeef0; color: #d73a49; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
-
         .date-display { color: #57606a; font-size: 0.85rem; margin-top: 8px; }
-
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
-
-        .stat-tile {
-            background: rgba(248, 250, 252, 0.8);
-            padding: 15px;
-            border-radius: 16px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-        }
-
+        .stat-tile { background: rgba(248, 250, 252, 0.8); padding: 15px; border-radius: 16px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
         .stat-tile:hover { border-color: var(--accent-green); background: #fff; }
         .stat-tile.active { border-color: var(--accent-green); background: #f0f9f6; }
-
         .stat-label { font-size: 0.7rem; color: #57606a; display: block; text-transform: uppercase; font-weight: 600; }
         .stat-value { font-size: 1.4rem; font-weight: bold; margin-top: 4px; display: block; }
         .extremes { font-size: 0.75rem; color: #8b949e; margin-top: 4px; }
-        .extremes span { font-weight: bold; color: var(--text-main); }
-
         .chart-container { margin-top: 20px; height: 200px; }
-
-        .whatsapp-btn {
-            background: #25d366;
-            color: white;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px;
-            border-radius: 12px;
-            font-weight: 600;
-            margin-top: 20px;
-        }
-
+        .whatsapp-btn { background: #25d366; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: 12px; font-weight: 600; margin-top: 20px; }
         .seo-footer { margin-top: 40px; font-size: 0.85rem; color: #57606a; line-height: 1.6; border-top: 1px solid var(--border); padding-top: 20px; }
     </style>
 </head>
 <body id="bodyTag">
-
 <div class="container">
     <div class="main-card">
         <header>
             <h1>Weerstation Eext <span class="live-badge">● LIVE</span></h1>
             <div id="currentDate" class="date-display">Laden...</div>
         </header>
-
         <div class="grid">
-            <div class="stat-tile active" onclick="updateView('temp', event)">
+            <div id="tile-temp" class="stat-tile active" onclick="updateView('temp', event)">
                 <span class="stat-label">🌡️ Temperatuur</span>
                 <span id="temp" class="stat-value">--.-°C</span>
                 <div class="extremes">Min: <span id="minTemp">--</span>° | Max: <span id="maxTemp">--</span>°</div>
             </div>
-            <div class="stat-tile" onclick="updateView('wind', event)">
+            <div id="tile-wind" class="stat-tile" onclick="updateView('wind', event)">
                 <span class="stat-label">💨 Wind</span>
                 <span id="wind" class="stat-value">-- km/u</span>
                 <div class="extremes"><span id="windDir">--</span> | Stoot: <span id="windGust">--</span></div>
             </div>
-            <div class="stat-tile" onclick="updateView('hum', event)">
+            <div id="tile-hum" class="stat-tile" onclick="updateView('hum', event)">
                 <span class="stat-label">💧 Vochtigheid</span>
                 <span id="hum" class="stat-value">--%</span>
             </div>
-            <div class="stat-tile" onclick="updateView('rain', event)">
+            <div id="tile-rain" class="stat-tile" onclick="updateView('rain', event)">
                 <span class="stat-label">🌧️ Regen</span>
                 <span id="rain" class="stat-value">-- mm</span>
             </div>
         </div>
-
-        <div class="chart-container">
-            <canvas id="weatherChart"></canvas>
-        </div>
-
-        <a id="whatsappBtn" href="#" class="whatsapp-btn" target="_blank">
-            🟢 Deel weer in Eext via WhatsApp
-        </a>
+        <div class="chart-container"><canvas id="weatherChart"></canvas></div>
+        <a id="whatsappBtn" href="#" class="whatsapp-btn" target="_blank">🟢 Deel weer in Eext via WhatsApp</a>
     </div>
-
     <section class="seo-footer">
-        <p>Live weergegevens uit <strong>Eext</strong> via weerstation <strong>IEEXT9</strong>. Deze pagina toont de actuele temperatuur, windkracht en neerslag in het dorp. De gegevens worden elke 5 minuten ververst en de tijd wordt afgerond naar het dichtstbijzijnde kwartier.</p>
+        <p>Live weergegevens uit <strong>Eext</strong> via station <strong>IEEXT9</strong>. De tijd wordt afgerond naar het eerstvolgende kwartier.</p>
     </section>
 </div>
-
 <script>
     const apiKey = 'b48a666b596749648a666b5967396428';
     const stationId = 'IEEXT9';
@@ -155,8 +89,10 @@
 
     async function fetchAllData() {
         try {
+            // Live data
             const liveRes = await fetch(`https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
             const liveJson = await liveRes.json();
+            if(!liveJson.observations) return;
             const obs = liveJson.observations[0];
             const t = obs.metric.temp;
 
@@ -170,25 +106,28 @@
             const body = document.getElementById('bodyTag');
             body.className = ''; 
             if (t < 10) body.classList.add('weather-cold');
-            else if (t < 20) body.classList.add('weather-mild');
+            else if (t < 18) body.classList.add('weather-mild');
             else body.classList.add('weather-warm');
 
-            const dStr = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-            document.getElementById('currentDate').innerText = `${dStr} | ${getRoundedTime()}`;
+            document.getElementById('currentDate').innerText = `${new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })} | ${getRoundedTime()}`;
 
+            // Historie ophalen
             const histRes = await fetch(`https://api.weather.com/v2/pws/observations/all/1day?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
             const histJson = await histRes.json();
-            historyData = histJson.observations || [];
-
-            if (historyData.length > 0) {
+            
+            if (histJson && histJson.observations && histJson.observations.length > 0) {
+                historyData = histJson.observations;
                 const temps = historyData.map(o => o.metric.temp);
                 document.getElementById('maxTemp').innerText = Math.max(...temps).toFixed(1);
                 document.getElementById('minTemp').innerText = Math.min(...temps).toFixed(1);
                 updateChart(currentView);
             }
-            const msg = encodeURIComponent(`Het weer in Eext nu: ${t.toFixed(1)}°C. Bekijk het op eextweer.nl!`);
-            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${msg}`;
-        } catch (e) { console.error(e); }
+            
+            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${encodeURIComponent('Weer in Eext: ' + t.toFixed(1) + '°C. Zie eextweer.nl')}`;
+        } catch (e) { 
+            console.error("Data error, opnieuw proberen over 10 sec...");
+            setTimeout(fetchAllData, 10000);
+        }
     }
 
     function updateView(type, event) {
@@ -203,26 +142,15 @@
         const step = Math.max(1, Math.floor(historyData.length / 12));
         const sample = historyData.filter((_, i) => i % step === 0);
         weatherChart.data.labels = sample.map(o => new Date(o.obsTimeLocal).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
-        
         if(type==='temp') weatherChart.data.datasets[0].data = sample.map(o => o.metric.temp);
         else if(type==='wind') weatherChart.data.datasets[0].data = sample.map(o => o.metric.windSpeed);
         else if(type==='hum') weatherChart.data.datasets[0].data = sample.map(o => o.humidity);
         else weatherChart.data.datasets[0].data = sample.map(o => o.metric.precipTotal);
-        
         weatherChart.update('none');
     }
 
     const ctx = document.getElementById('weatherChart').getContext('2d');
-    weatherChart = new Chart(ctx, { 
-        type: 'line', 
-        data: { datasets: [{ borderColor: '#52a48e', backgroundColor: 'rgba(82, 164, 142, 0.1)', fill: true, tension: 0.3, borderWidth: 3, pointRadius: 2 }] }, 
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { legend: { display: false } },
-            scales: { x: { ticks: { maxTicksLimit: 6 } }, y: { beginAtZero: false } } 
-        } 
-    });
+    weatherChart = new Chart(ctx, { type: 'line', data: { datasets: [{ borderColor: '#52a48e', backgroundColor: 'rgba(82, 164, 142, 0.1)', fill: true, tension: 0.3, borderWidth: 3, pointRadius: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false } } } });
     
     fetchAllData();
     setInterval(fetchAllData, 300000);
