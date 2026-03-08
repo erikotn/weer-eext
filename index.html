@@ -22,7 +22,6 @@
         .stat-value { font-size: 1.4rem; font-weight: 800; margin-top: 5px; display: block; }
         .sub-value { font-size: 0.8rem; color: #8b949e; margin-top: 4px; display: block; }
         
-        /* Accordion Style voor extra data */
         details { background: #f8fafc; border-radius: 16px; margin-top: 15px; border: 1px solid var(--border); overflow: hidden; }
         summary { padding: 15px; font-weight: 600; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
         summary::after { content: '＋'; font-weight: bold; color: var(--accent-green); }
@@ -60,7 +59,7 @@
                 <span class="sub-value">Dauwpunt: <span id="dewPoint">--</span>°</span>
             </div>
             <div class="stat-tile">
-                <span class="stat-label">🌧️ Neerslag</span>
+                <span class="stat-label">🌧️ Regen</span>
                 <span id="rain" class="stat-value">-- mm</span>
                 <span class="sub-value">Vandaag totaal</span>
             </div>
@@ -125,7 +124,6 @@
             const obs = data.observations[0];
             const t = obs.metric.temp;
 
-            // Hoofddata
             document.getElementById('temp').innerText = t.toFixed(1) + '°C';
             document.getElementById('feelsLike').innerText = obs.metric.windChill !== null ? obs.metric.windChill.toFixed(1) : t.toFixed(1);
             document.getElementById('wind').innerText = obs.metric.windSpeed + ' km/u';
@@ -134,10 +132,9 @@
             document.getElementById('dewPoint').innerText = obs.metric.dewpt.toFixed(1);
             document.getElementById('rain').innerText = obs.metric.precipTotal + ' mm';
 
-            // Extra data in uitklapmenu
             document.getElementById('solar').innerText = obs.solarRadiation || '0';
             document.getElementById('uv').innerText = obs.uv || '0';
-            document.getElementById('press').innerText = obs.metric.pressureTrend || obs.metric.pressureMax || '--';
+            document.getElementById('press').innerText = obs.metric.pressure || '--';
             document.getElementById('gust').innerText = obs.metric.windGust || '0';
 
             const body = document.getElementById('bodyTag');
