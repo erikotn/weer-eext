@@ -3,69 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weerstation Eext | Actueel</title>
+    <title>Weerstation Eext | Actueel & Verwachting</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/869/869869.png" type="image/x-icon">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --bg-color: #f0f2f5; --card-bg: rgba(255, 255, 255, 0.95); --text-main: #1c2128; --accent-green: #52a48e; --border: #e1e4e8; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); color: var(--text-main); padding: 20px; margin: 0; min-height: 100vh; transition: background 1.5s ease; }
+        :root { 
+            --bg-color: #f0f2f5; 
+            --card-bg: rgba(255, 255, 255, 0.95); 
+            --text-main: #1c2128; 
+            --accent-green: #52a48e; 
+            --border: #e1e4e8; 
+        }
+
+        body { 
+            font-family: -apple-system, system-ui, sans-serif; 
+            background: var(--bg-color); 
+            color: var(--text-main); 
+            padding: 20px; 
+            margin: 0; 
+            min-height: 100vh; 
+            transition: background 1.5s ease; 
+        }
+
+        /* Dynamische sfeer-kleuren */
         .weather-cold { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
         .weather-mild { background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%); }
         .weather-warm { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); }
-        .container { max-width: 550px; margin: auto; }
-        .main-card { background: var(--card-bg); border-radius: 24px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: 1px solid var(--border); backdrop-filter: blur(10px); }
-        header { border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; }
-        h1 { font-size: 1.5rem; margin: 0; display: flex; align-items: center; justify-content: space-between; }
-        .live-badge { background: #ffeef0; color: #d73a49; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
-        .date-display { color: #57606a; font-size: 0.85rem; margin-top: 8px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
-        .stat-tile { background: rgba(248, 250, 252, 0.8); padding: 15px; border-radius: 16px; border: 2px solid transparent; }
-        .stat-label { font-size: 0.7rem; color: #57606a; display: block; text-transform: uppercase; font-weight: 600; }
-        .stat-value { font-size: 1.4rem; font-weight: bold; margin-top: 4px; display: block; }
-        .extremes { font-size: 0.75rem; color: #8b949e; margin-top: 4px; }
-        .chart-container { margin-top: 20px; height: 180px; }
-        .whatsapp-btn { background: #25d366; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: 12px; font-weight: 600; margin-top: 20px; }
+
+        .container { max-width: 500px; margin: auto; }
+
+        .main-card { 
+            background: var(--card-bg); 
+            border-radius: 28px; 
+            padding: 30px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+            border: 1px solid var(--border); 
+            backdrop-filter: blur(10px); 
+        }
+
+        header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 25px; }
+        h1 { font-size: 1.6rem; margin: 0; display: flex; align-items: center; justify-content: space-between; }
+        
+        .live-badge { 
+            background: #ffeef0; color: #d73a49; padding: 5px 12px; 
+            border-radius: 20px; font-size: 0.75rem; font-weight: bold;
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .date-display { color: #57606a; font-size: 0.9rem; margin-top: 10px; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+
+        .stat-tile { 
+            background: rgba(248, 250, 252, 0.8); 
+            padding: 20px; 
+            border-radius: 20px; 
+            border: 1px solid var(--border);
+        }
+
+        .stat-label { font-size: 0.75rem; color: #57606a; display: block; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .stat-value { font-size: 1.6rem; font-weight: 800; margin-top: 8px; display: block; }
+        .sub-value { font-size: 0.85rem; color: #8b949e; margin-top: 5px; display: block; }
+
+        .forecast-box {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 2px dashed var(--border);
+            margin-top: 10px;
+        }
+
+        .action-btn { 
+            background: var(--accent-green); 
+            color: white; 
+            text-decoration: none; 
+            display: block; 
+            text-align: center; 
+            padding: 16px; 
+            border-radius: 16px; 
+            font-weight: 700; 
+            font-size: 1.1rem;
+            margin-top: 15px;
+            transition: transform 0.2s;
+        }
+
+        .action-btn:active { transform: scale(0.98); }
+
+        .whatsapp-btn { 
+            background: #25d366; 
+            color: white; 
+            text-decoration: none; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            padding: 14px; 
+            border-radius: 16px; 
+            font-weight: 600; 
+            margin-top: 12px; 
+        }
+
+        .footer-note { margin-top: 30px; font-size: 0.8rem; color: #6e7681; text-align: center; line-height: 1.5; }
     </style>
 </head>
 <body id="bodyTag">
+
 <div class="container">
     <div class="main-card">
         <header>
-            <h1>Weerstation Eext <span class="live-badge">● LIVE</span></h1>
+            <h1>Eext <span class="live-badge">● LIVE</span></h1>
             <div id="currentDate" class="date-display">Laden...</div>
         </header>
+
         <div class="grid">
             <div class="stat-tile">
                 <span class="stat-label">🌡️ Temperatuur</span>
                 <span id="temp" class="stat-value">--.-°C</span>
-                <div class="extremes">Gevoel: <span id="feelsLike">--</span>°C</div>
+                <span class="sub-value">Gevoel: <span id="feelsLike">--</span>°</span>
             </div>
             <div class="stat-tile">
                 <span class="stat-label">💨 Wind</span>
                 <span id="wind" class="stat-value">-- km/u</span>
-                <div class="extremes"><span id="windDir">--</span> | Stoot: <span id="windGust">--</span></div>
+                <span class="sub-value"><span id="windDir">--</span> | Stoot: <span id="windGust">--</span></span>
             </div>
             <div class="stat-tile">
-                <span class="stat-label">💧 Vochtigheid</span>
+                <span class="stat-label">💧 Lucht</span>
                 <span id="hum" class="stat-value">--%</span>
-                <div class="extremes">Dauwpunt: <span id="dewPoint">--</span>°</div>
+                <span class="sub-value">Dauwpunt: <span id="dewPoint">--</span>°</span>
             </div>
-            <div id="tile-rain" class="stat-tile">
-                <span class="stat-label">🌧️ Regen</span>
+            <div class="stat-tile">
+                <span class="stat-label">🌧️ Neerslag</span>
                 <span id="rain" class="stat-value">-- mm</span>
-                <div class="extremes">Vandaag totaal</div>
+                <span class="sub-value">Totaal vandaag</span>
             </div>
         </div>
-        <div class="chart-container"><canvas id="weatherChart"></canvas></div>
-        <a id="whatsappBtn" href="#" class="whatsapp-btn" target="_blank">🟢 Deel weer in Eext via WhatsApp</a>
+
+        <div class="forecast-box">
+            <span style="font-size: 0.9rem; font-weight: 600; color: #4b5563;">Krijg de volledige verwachting:</span>
+            <a href="https://www.wunderground.com/forecast/nl/eext/IEEXT9" class="action-btn" target="_blank">
+                📅 Weersvoorspelling Eext
+            </a>
+        </div>
+
+        <a id="whatsappBtn" href="#" class="whatsapp-btn" target="_blank">
+            🟢 Deel actueel weer via WhatsApp
+        </a>
+    </div>
+
+    <div class="footer-note">
+        Gegevens direct van weerstation <strong>IEEXT9</strong> in Eext.<br>
+        Laatste update afgerond naar <strong><span id="roundedTime">--:--</span></strong>.
     </div>
 </div>
+
 <script>
     const apiKey = 'b48a666b596749648a666b5967396428';
     const stationId = 'IEEXT9';
-    let weatherChart;
-    let liveTrendData = [];
-    let liveLabels = [];
 
     function getRoundedTime() {
         const now = new Date();
@@ -78,18 +171,19 @@
     }
 
     function degToCompass(num) {
-        const arr = ["N", "NNO", "NO", "ONO", "O", "OZO", "ZO", "ZZO", "Z", "ZZW", "ZW", "WZW", "W", "WNW", "NW", "NNW"];
+        const arr = ["Noord", "NNO", "Noordoost", "ONO", "Oost", "OZO", "Zuidoost", "ZZO", "Zuid", "ZZW", "Zuidwest", "WZW", "West", "WNW", "Noordwest", "NNW"];
         return arr[(Math.floor((num / 22.5) + 0.5) % 16)];
     }
 
-    async function fetchUpdate() {
+    async function fetchWeather() {
         try {
             const res = await fetch(`https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
-            const json = await res.json();
-            if(!json.observations) return;
-            const obs = json.observations[0];
+            const data = await res.json();
+            if(!data.observations) return;
+            const obs = data.observations[0];
             const t = obs.metric.temp;
 
+            // Update UI
             document.getElementById('temp').innerText = t.toFixed(1) + '°C';
             document.getElementById('feelsLike').innerText = obs.metric.windChill !== null ? obs.metric.windChill.toFixed(1) : t.toFixed(1);
             document.getElementById('wind').innerText = obs.metric.windSpeed + ' km/u';
@@ -99,30 +193,23 @@
             document.getElementById('dewPoint').innerText = obs.metric.dewpt.toFixed(1);
             document.getElementById('rain').innerText = obs.metric.precipTotal + ' mm';
 
+            // Dynamische achtergrond
             const body = document.getElementById('bodyTag');
             body.className = t < 10 ? 'weather-cold' : (t < 18 ? 'weather-mild' : 'weather-warm');
 
-            document.getElementById('currentDate').innerText = `${new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })} | ${getRoundedTime()}`;
+            // Datum en afgeronde tijd
+            const dateStr = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+            const roundTime = getRoundedTime();
+            document.getElementById('currentDate').innerText = `${dateStr}`;
+            document.getElementById('roundedTime').innerText = roundTime;
 
-            // Update live grafiek (Trend)
-            const nowTime = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-            liveTrendData.push(t);
-            liveLabels.push(nowTime);
-            if(liveTrendData.length > 20) { liveTrendData.shift(); liveLabels.shift(); }
-            
-            weatherChart.data.labels = liveLabels;
-            weatherChart.data.datasets[0].data = liveTrendData;
-            weatherChart.update();
-
-            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${encodeURIComponent('Weer in Eext: ' + t.toFixed(1) + '°C. Zie eextweer.nl')}`;
-        } catch (e) { console.error(e); }
+            // WhatsApp link
+            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${encodeURIComponent('Het weer in Eext nu: ' + t.toFixed(1) + '°C. Check het live op eextweer.nl!')}`;
+        } catch (e) { console.error("Fout bij ophalen weer:", e); }
     }
 
-    const ctx = document.getElementById('weatherChart').getContext('2d');
-    weatherChart = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [{ label: 'Trend °C', borderColor: '#52a48e', backgroundColor: 'rgba(82, 164, 142, 0.1)', fill: true, tension: 0.3, data: [] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-    
-    fetchUpdate();
-    setInterval(fetchUpdate, 300000);
+    fetchWeather();
+    setInterval(fetchWeather, 300000); // Elke 5 minuten
 </script>
 </body>
 </html>
