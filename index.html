@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weer Eext Nu | Actueel Weer en Temperatuur in Eext</title>
+    <title>Weerstation Eext | Actuele Weergegevens IEEXT9</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/869/869869.png" type="image/x-icon">
     
-    <meta name="description" content="Wat is het weer in Eext nu? Bekijk de live temperatuur, wind en neerslag van weerstation IEEXT9. Altijd de laatste updates over hoe warm het is in Eext.">
-    <meta name="keywords" content="weer eext nu, actueel weer eext, hoe warm eext, weerstation eext, temperatuur eext">
-
+    <meta name="description" content="Bekijk het actuele weer in Eext. Live temperatuur, wind en neerslag van weerstation IEEXT9.">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -71,19 +69,6 @@
 
         .chart-container { margin-top: 20px; height: 200px; }
 
-        .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-        
-        .action-btn {
-            background: var(--accent-green);
-            color: white;
-            text-decoration: none;
-            display: block;
-            text-align: center;
-            padding: 14px;
-            border-radius: 12px;
-            font-weight: 600;
-        }
-
         .whatsapp-btn {
             background: #25d366;
             color: white;
@@ -92,13 +77,13 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 12px;
+            padding: 14px;
             border-radius: 12px;
             font-weight: 600;
+            margin-top: 20px;
         }
 
-        .seo-footer { margin-top: 40px; font-size: 0.85rem; color: #57606a; line-height: 1.6; }
-        .seo-footer h2 { font-size: 1rem; color: var(--text-main); margin-bottom: 10px; }
+        .seo-footer { margin-top: 40px; font-size: 0.85rem; color: #57606a; line-height: 1.6; border-top: 1px solid var(--border); padding-top: 20px; }
     </style>
 </head>
 <body id="bodyTag">
@@ -111,21 +96,21 @@
         </header>
 
         <div class="grid">
-            <div id="tile-temp" class="stat-tile active" onclick="updateView('temp', event)">
+            <div class="stat-tile active" onclick="updateView('temp', event)">
                 <span class="stat-label">🌡️ Temperatuur</span>
                 <span id="temp" class="stat-value">--.-°C</span>
                 <div class="extremes">Min: <span id="minTemp">--</span>° | Max: <span id="maxTemp">--</span>°</div>
             </div>
-            <div id="tile-wind" class="stat-tile" onclick="updateView('wind', event)">
+            <div class="stat-tile" onclick="updateView('wind', event)">
                 <span class="stat-label">💨 Wind</span>
                 <span id="wind" class="stat-value">-- km/u</span>
-                <div class="extremes">Stoot: <span id="windGust">--</span> km/u</div>
+                <div class="extremes"><span id="windDir">--</span> | Stoot: <span id="windGust">--</span></div>
             </div>
-            <div id="tile-hum" class="stat-tile" onclick="updateView('hum', event)">
+            <div class="stat-tile" onclick="updateView('hum', event)">
                 <span class="stat-label">💧 Vochtigheid</span>
                 <span id="hum" class="stat-value">--%</span>
             </div>
-            <div id="tile-rain" class="stat-tile" onclick="updateView('rain', event)">
+            <div class="stat-tile" onclick="updateView('rain', event)">
                 <span class="stat-label">🌧️ Regen</span>
                 <span id="rain" class="stat-value">-- mm</span>
             </div>
@@ -135,19 +120,13 @@
             <canvas id="weatherChart"></canvas>
         </div>
 
-        <div class="btn-group">
-            <a href="https://www.wunderground.com/forecast/nl/eext/IEEXT9" class="action-btn" target="_blank">
-                Bekijk de weersverwachting
-            </a>
-            <a id="whatsappBtn" href="#" class="whatsapp-btn" target="_blank">
-                🟢 Deel temperatuur in Eext via WhatsApp
-            </a>
-        </div>
+        <a id="whatsappBtn" href="#" class="whatsapp-btn" target="_blank">
+            🟢 Deel weer in Eext via WhatsApp
+        </a>
     </div>
 
     <section class="seo-footer">
-        <h2>Actueel Weer in Eext</h2>
-        <p>Bekijk de <strong>live temperatuur in Eext</strong>, direct vanaf weerstation IEEXT9. Deze pagina toont u de meest recente gegevens over windkracht, neerslag en luchtvochtigheid in het dorp. Ideaal voor inwoners van Eext die willen weten of ze een jas aan moeten of dat de zon krachtig genoeg is.</p>
+        <p>Live weergegevens uit <strong>Eext</strong> via weerstation <strong>IEEXT9</strong>. Deze pagina toont de actuele temperatuur, windkracht en neerslag in het dorp. De gegevens worden elke 5 minuten ververst en de tijd wordt afgerond naar het dichtstbijzijnde kwartier.</p>
     </section>
 </div>
 
@@ -162,15 +141,20 @@
         const now = new Date();
         const minutes = now.getMinutes();
         const rounded = Math.ceil(minutes / 15) * 15;
-        const displayDate = new Date(now);
-        if (rounded === 60) { displayDate.setHours(now.getHours() + 1); displayDate.setMinutes(0); }
-        else { displayDate.setMinutes(rounded); }
-        return displayDate.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+        const d = new Date(now);
+        if (rounded === 60) { d.setHours(now.getHours() + 1); d.setMinutes(0); }
+        else { d.setMinutes(rounded); }
+        return d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function degToCompass(num) {
+        const val = Math.floor((num / 22.5) + 0.5);
+        const arr = ["N", "NNO", "NO", "ONO", "O", "OZO", "ZO", "ZZO", "Z", "ZZW", "ZW", "WZW", "W", "WNW", "NW", "NNW"];
+        return arr[(val % 16)];
     }
 
     async function fetchAllData() {
         try {
-            // 1. Live Data ophalen
             const liveRes = await fetch(`https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
             const liveJson = await liveRes.json();
             const obs = liveJson.observations[0];
@@ -178,26 +162,20 @@
 
             document.getElementById('temp').innerText = t.toFixed(1) + '°C';
             document.getElementById('wind').innerText = obs.metric.windSpeed + ' km/u';
-            document.getElementById('windGust').innerText = obs.metric.windGust || '--';
+            document.getElementById('windGust').innerText = obs.metric.windGust + ' km/u';
+            document.getElementById('windDir').innerText = degToCompass(obs.winddir);
             document.getElementById('hum').innerText = obs.humidity + '%';
             document.getElementById('rain').innerText = obs.metric.precipTotal + ' mm';
 
-            // WhatsApp link
-            const msg = encodeURIComponent(`Het weer in Eext nu: het is ${t.toFixed(1)}°C. Bekijk het live op eextweer.nl!`);
-            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${msg}`;
-
-            // Achtergrond kleur
             const body = document.getElementById('bodyTag');
             body.className = ''; 
             if (t < 10) body.classList.add('weather-cold');
             else if (t < 20) body.classList.add('weather-mild');
             else body.classList.add('weather-warm');
 
-            // Header Update
-            const d = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-            document.getElementById('currentDate').innerText = `${d} | ${getRoundedTime()}`;
+            const dStr = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('currentDate').innerText = `${dStr} | ${getRoundedTime()}`;
 
-            // 2. Historische Data ophalen voor Grafiek & Extremen
             const histRes = await fetch(`https://api.weather.com/v2/pws/observations/all/1day?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
             const histJson = await histRes.json();
             historyData = histJson.observations || [];
@@ -206,11 +184,11 @@
                 const temps = historyData.map(o => o.metric.temp);
                 document.getElementById('maxTemp').innerText = Math.max(...temps).toFixed(1);
                 document.getElementById('minTemp').innerText = Math.min(...temps).toFixed(1);
-                
-                // Forceer grafiek update met ECHTE data
                 updateChart(currentView);
             }
-        } catch (e) { console.error("Fout:", e); }
+            const msg = encodeURIComponent(`Het weer in Eext nu: ${t.toFixed(1)}°C. Bekijk het op eextweer.nl!`);
+            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${msg}`;
+        } catch (e) { console.error(e); }
     }
 
     function updateView(type, event) {
@@ -222,60 +200,32 @@
 
     function updateChart(type) {
         if (!weatherChart || historyData.length === 0) return;
-
-        // Filter data naar max 12 punten voor leesbaarheid
         const step = Math.max(1, Math.floor(historyData.length / 12));
-        const sampleData = historyData.filter((_, i) => i % step === 0);
+        const sample = historyData.filter((_, i) => i % step === 0);
+        weatherChart.data.labels = sample.map(o => new Date(o.obsTimeLocal).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
         
-        const labels = sampleData.map(o => {
-            const date = new Date(o.obsTimeLocal);
-            return date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-        });
-
-        let dataPoints = [];
-        let labelText = '';
-
-        switch(type) {
-            case 'temp': dataPoints = sampleData.map(o => o.metric.temp); labelText = 'Temperatuur °C'; break;
-            case 'wind': dataPoints = sampleData.map(o => o.metric.windSpeed); labelText = 'Wind km/u'; break;
-            case 'hum': dataPoints = sampleData.map(o => o.humidity); labelText = 'Luchtvochtigheid %'; break;
-            case 'rain': dataPoints = sampleData.map(o => o.metric.precipTotal); labelText = 'Neerslag mm'; break;
-        }
-
-        weatherChart.data.labels = labels;
-        weatherChart.data.datasets[0].data = dataPoints;
-        weatherChart.data.datasets[0].label = labelText;
-        weatherChart.update('none'); // Update zonder flits-animatie
+        if(type==='temp') weatherChart.data.datasets[0].data = sample.map(o => o.metric.temp);
+        else if(type==='wind') weatherChart.data.datasets[0].data = sample.map(o => o.metric.windSpeed);
+        else if(type==='hum') weatherChart.data.datasets[0].data = sample.map(o => o.humidity);
+        else weatherChart.data.datasets[0].data = sample.map(o => o.metric.precipTotal);
+        
+        weatherChart.update('none');
     }
 
-    function initChart() {
-        const ctx = document.getElementById('weatherChart').getContext('2d');
-        weatherChart = new Chart(ctx, {
-            type: 'line',
-            data: { datasets: [{ 
-                borderColor: '#52a48e', 
-                backgroundColor: 'rgba(82, 164, 142, 0.1)', 
-                fill: true, 
-                tension: 0.3, 
-                borderWidth: 3, 
-                pointRadius: 2,
-                pointBackgroundColor: '#52a48e'
-            }] },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { legend: { display: false } },
-                scales: { 
-                    x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 6 } }, 
-                    y: { grid: { color: 'rgba(0,0,0,0.05)' }, beginAtZero: false } 
-                }
-            }
-        });
-    }
-
-    initChart();
+    const ctx = document.getElementById('weatherChart').getContext('2d');
+    weatherChart = new Chart(ctx, { 
+        type: 'line', 
+        data: { datasets: [{ borderColor: '#52a48e', backgroundColor: 'rgba(82, 164, 142, 0.1)', fill: true, tension: 0.3, borderWidth: 3, pointRadius: 2 }] }, 
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { maxTicksLimit: 6 } }, y: { beginAtZero: false } } 
+        } 
+    });
+    
     fetchAllData();
-    setInterval(fetchAllData, 300000); // Elke 5 min verversen
+    setInterval(fetchAllData, 300000);
 </script>
 </body>
 </html>
