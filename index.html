@@ -1,13 +1,26 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MWDKPEKGKQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-MWDKPEKGKQ');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weerstation Eext | Live Hondsrug</title>
+    <title>Weerstation Eext | Live Weer op de Hondsrug</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/869/869869.png" type="image/x-icon">
+    
+    <meta name="description" content="Bekijk het actuele weer in Eext op de Hondsrug. Live temperatuur, windkracht en neerslag van weerstation IEEXT9. De meest nauwkeurige lokale weersinformatie uit Eext, Drenthe.">
+    <meta name="keywords" content="weer eext nu, actueel weer eext, hoe warm eext, weerstation eext, temperatuur eext, weer hondsrug, weer drenthe">
+
     <style>
         :root { --bg-color: #f0f2f5; --card-bg: rgba(255, 255, 255, 0.95); --text-main: #1c2128; --accent-green: #52a48e; --border: #e1e4e8; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); color: var(--text-main); padding: 20px; margin: 0; min-height: 100vh; transition: background 1.5s ease; overflow-x: hidden; }
+        
         .weather-cold { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
         .weather-mild { background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%); }
         .weather-warm { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); }
@@ -25,19 +38,21 @@
         .stat-value { font-size: 1.4rem; font-weight: 800; margin-top: 5px; display: block; }
         .sub-value { font-size: 0.8rem; color: #8b949e; margin-top: 4px; display: block; }
         
-        /* Regen Animatie */
         #rain-drops { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; display: none; }
         .drop { position: absolute; background: rgba(255,255,255,0.6); width: 2px; height: 15px; top: -20px; animation: fall linear infinite; }
         @keyframes fall { to { transform: translateY(110vh); } }
 
-        details { background: #f8fafc; border-radius: 16px; margin-top: 15px; border: 1px solid var(--border); }
+        details { background: #f8fafc; border-radius: 16px; margin-top: 15px; border: 1px solid var(--border); overflow: hidden; }
         summary { padding: 15px; font-weight: 600; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
-        summary::after { content: '＋'; color: var(--accent-green); }
+        summary::after { content: '＋'; color: var(--accent-green); font-weight: bold; }
+        details[open] summary::after { content: '－'; }
         .extra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; border-top: 1px solid var(--border); background: #fff; }
-        
+
         .action-btn { background: var(--accent-green); color: white; text-decoration: none; display: block; text-align: center; padding: 14px; border-radius: 14px; font-weight: 700; margin-top: 20px; }
         .whatsapp-btn { background: #25d366; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 14px; font-weight: 600; margin-top: 10px; }
-        .seo-footer { margin-top: 30px; font-size: 0.8rem; color: #57606a; line-height: 1.6; border-top: 1px solid var(--border); padding-top: 20px; }
+        
+        .seo-footer { margin-top: 35px; font-size: 0.85rem; color: #57606a; line-height: 1.6; border-top: 1px solid var(--border); padding-top: 25px; }
+        .seo-footer h2 { font-size: 1.1rem; color: var(--text-main); margin-bottom: 12px; }
     </style>
 </head>
 <body id="bodyTag">
@@ -45,7 +60,7 @@
 <div class="container">
     <div class="main-card">
         <header>
-            <h1>Weer Eext <span class="live-badge">● LIVE</span></h1>
+            <h1>Eext Weerstation <span class="live-badge">● LIVE</span></h1>
             <div id="currentDate" style="color: #57606a; font-size: 0.85rem; margin-top: 8px;">Laden...</div>
         </header>
         
@@ -73,35 +88,36 @@
         </div>
 
         <details>
-            <summary>Meer details bekijken</summary>
+            <summary>Meer weersdetails</summary>
             <div class="extra-grid">
                 <div class="stat-tile">
-                    <span class="stat-label">☀️ Zon</span>
+                    <span class="stat-label">☀️ Zonkracht</span>
                     <span id="solar" style="font-weight: bold;">--</span> <small>W/m²</small>
                 </div>
                 <div class="stat-tile">
-                    <span class="stat-label">🧴 UV</span>
+                    <span class="stat-label">🧴 UV Index</span>
                     <span id="uv" style="font-weight: bold;">--</span>
                 </div>
                 <div class="stat-tile">
-                    <span class="stat-label">⏲️ Druk</span>
+                    <span class="stat-label">⏲️ Luchtdruk</span>
                     <span id="press" style="font-weight: bold;">--</span> <small>hPa</small>
                 </div>
                 <div class="stat-tile">
-                    <span class="stat-label">🌪️ Stoot</span>
+                    <span class="stat-label">🌪️ Windstoot</span>
                     <span id="gust" style="font-weight: bold;">--</span> <small>km/u</small>
                 </div>
             </div>
         </details>
 
-        <a href="https://www.wunderground.com/forecast/nl/eext/IEEXT9" class="action-btn" target="_blank">📅 Volledige verwachting</a>
-        <a id="whatsappBtn" href="#" class="whatsapp-btn" target="_blank">🟢 Deel weer via WhatsApp</a>
+        <a href="https://www.wunderground.com/forecast/nl/eext/IEEXT9" class="action-btn" target="_blank">📅 Bekijk volledige voorspelling</a>
+        <a id="whatsappBtn" href="#" class="whatsapp-btn" target="_blank">🟢 Deel weer in Eext via WhatsApp</a>
     </div>
 
     <section class="seo-footer">
-        <h2>Weerbericht Eext op de Hondsrug</h2>
-        <p>Actuele metingen van station <strong>IEEXT9</strong> in Eext. Gegevens worden elke 5 minuten ververst en de weergavetijd wordt naar boven afgerond op het kwartier (Laatste check: <strong><span id="roundedTime">--:--</span></strong>).</p>
-        <p>Eext ligt op de Drentse Hondsrug, wat invloed heeft op lokale windpatronen.</p>
+        <h2>Actueel weer in Eext op de Hondsrug</h2>
+        <p>Bent u op zoek naar het <strong>weer in Eext</strong>? Onze website biedt realtime gegevens direct van weerstation <strong>IEEXT9</strong>. Gelegen op de karakteristieke <strong>Drentse Hondsrug</strong>, heeft Eext een uniek microklimaat. Omdat het dorp op een hoger punt ligt dan de omliggende gebieden, zijn de windkracht en neerslagpatronen hier vaak specifiek voor deze locatie.</p>
+        <p>Of het nu gaat om de <strong>actuele temperatuur in Eext</strong> voor uw dagelijkse activiteiten, de luchtvochtigheid voor uw tuin, of de exacte neerslaghoeveelheid na een bui; op deze pagina vindt u altijd de meest betrouwbare en lokale informatie. Onze metingen worden elke 5 minuten ververst en de tijd wordt voor de leesbaarheid naar boven afgerond op het kwartier.</p>
+        <p style="font-size: 0.75rem; border-top: 1px solid #eee; padding-top: 10px;">Laatste update: <strong><span id="roundedTime">--:--</span></strong>. Bron: Weerstation Eext (IEEXT9), Drenthe.</p>
     </section>
 </div>
 
@@ -119,15 +135,18 @@
         return d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
     }
 
+    function degToCompass(num) {
+        const arr = ["Noord", "NNO", "Noordoost", "ONO", "Oost", "OZO", "Zuidoost", "ZZO", "Zuid", "ZZW", "Zuidwest", "WZW", "West", "WNW", "Noordwest", "NNW"];
+        return arr[(Math.floor((num / 22.5) + 0.5) % 16)];
+    }
+
     function updateRainAnimation(rate) {
         const container = document.getElementById('rain-drops');
         container.innerHTML = '';
         if (rate <= 0) { container.style.display = 'none'; return; }
-        
         container.style.display = 'block';
         const count = Math.min(100, rate * 20); 
         const speed = Math.max(0.5, 2 / rate);
-
         for (let i = 0; i < count; i++) {
             const drop = document.createElement('div');
             drop.className = 'drop';
@@ -142,6 +161,7 @@
         try {
             const res = await fetch(`https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
             const data = await res.json();
+            if(!data.observations) return;
             const obs = data.observations[0];
             const t = obs.metric.temp;
             const rRate = obs.metric.precipRate;
@@ -149,7 +169,9 @@
             document.getElementById('temp').innerText = t.toFixed(1) + '°C';
             document.getElementById('feelsLike').innerText = (obs.metric.windChill || t).toFixed(1);
             document.getElementById('wind').innerText = obs.metric.windSpeed + ' km/u';
+            document.getElementById('windDir').innerText = degToCompass(obs.winddir);
             document.getElementById('hum').innerText = obs.humidity + '%';
+            document.getElementById('dewPoint').innerText = obs.metric.dewpt.toFixed(1);
             document.getElementById('rain').innerText = obs.metric.precipTotal + ' mm';
             document.getElementById('rainRate').innerText = rRate.toFixed(1) + ' mm/u';
             
@@ -162,9 +184,11 @@
 
             const body = document.getElementById('bodyTag');
             body.className = t < 10 ? 'weather-cold' : (t < 18 ? 'weather-mild' : 'weather-warm');
+            
             document.getElementById('roundedTime').innerText = getRoundedTime();
             document.getElementById('currentDate').innerText = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
-        } catch (e) { console.error(e); }
+            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${encodeURIComponent('Het actuele weer in Eext: ' + t.toFixed(1) + '°C. Bekijk het live op eextweer.nl!')}`;
+        } catch (e) { console.error("Fout bij ophalen:", e); }
     }
 
     fetchWeather();
