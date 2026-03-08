@@ -29,6 +29,7 @@
             min-height: 100vh;
         }
 
+        /* Dynamische thema's op basis van temperatuur */
         .weather-cold { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
         .weather-mild { background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%); }
         .weather-warm { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); }
@@ -46,7 +47,13 @@
 
         header { border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; }
         h1 { font-size: 1.5rem; margin: 0; display: flex; align-items: center; justify-content: space-between; }
-        .live-badge { background: #ffeef0; color: #d73a49; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
+        .live-badge { 
+            background: #ffeef0; color: #d73a49; padding: 4px 10px; 
+            border-radius: 12px; font-size: 0.7rem; font-weight: bold; 
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
         .date-display { color: #57606a; font-size: 0.85rem; margin-top: 8px; }
 
@@ -61,12 +68,13 @@
             transition: all 0.2s;
         }
 
-        .stat-tile:hover { border-color: var(--accent-green); background: #fff; }
+        .stat-tile:hover { border-color: var(--accent-green); background: #fff; transform: translateY(-2px); }
         .stat-tile.active { border-color: var(--accent-green); background: #f0f9f6; }
 
         .stat-label { font-size: 0.7rem; color: #57606a; display: block; text-transform: uppercase; font-weight: 600; }
         .stat-value { font-size: 1.4rem; font-weight: bold; margin-top: 4px; display: block; }
-        .extremes { font-size: 0.7rem; color: #8b949e; margin-top: 4px; }
+        .extremes { font-size: 0.75rem; color: #8b949e; margin-top: 4px; }
+        .extremes span { font-weight: bold; color: var(--text-main); }
 
         .chart-container { margin-top: 20px; height: 180px; }
 
@@ -81,6 +89,7 @@
             padding: 14px;
             border-radius: 12px;
             font-weight: 600;
+            box-shadow: 0 4px 12px rgba(82, 164, 142, 0.2);
         }
 
         .whatsapp-btn {
@@ -159,7 +168,7 @@
     function getRoundedTime() {
         const now = new Date();
         const minutes = now.getMinutes();
-        const rounded = Math.round(minutes / 15) * 15;
+        const rounded = Math.ceil(minutes / 15) * 15;
         if (rounded === 60) { now.setHours(now.getHours() + 1); now.setMinutes(0); }
         else { now.setMinutes(rounded); }
         return now.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
@@ -167,27 +176,33 @@
 
     async function fetchLive() {
         try {
+            // 1. Haal de huidige waarden op
             const res = await fetch(`https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
             const data = await res.json();
             const obs = data.observations[0];
             const t = obs.metric.temp;
 
-            // Update UI
             document.getElementById('temp').innerText = t.toFixed(1) + '°C';
             document.getElementById('wind').innerText = obs.metric.windSpeed + ' km/u';
             document.getElementById('windGust').innerText = obs.metric.windGust || '--';
             document.getElementById('hum').innerText = obs.humidity + '%';
             document.getElementById('rain').innerText = obs.metric.precipTotal + ' mm';
+
+            // 2. Haal de echte extremen van vandaag op (via 24u history)
+            const summaryRes = await fetch(`https://api.weather.com/v2/pws/observations/all/1day?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
+            const summaryData = await summaryRes.json();
             
-            // Extremen (hier gebruiken we even de stats van de huidige observatie)
-            document.getElementById('minTemp').innerText = obs.metric.dewpt.toFixed(1); // Simpel voorbeeld
-            document.getElementById('maxTemp').innerText = obs.metric.heatIndex.toFixed(1);
+            if (summaryData && summaryData.observations) {
+                const temps = summaryData.observations.map(o => o.metric.temp);
+                document.getElementById('maxTemp').innerText = Math.max(...temps).toFixed(1);
+                document.getElementById('minTemp').innerText = Math.min(...temps).toFixed(1);
+            }
 
             // WhatsApp link
             const msg = encodeURIComponent(`Het weer in Eext nu: het is ${t.toFixed(1)}°C. Bekijk de details op eextweer.nl!`);
             document.getElementById('whatsappBtn').href = `https://wa.me/?text=${msg}`;
 
-            // Achtergrond
+            // Thema aanpassen
             const body = document.getElementById('bodyTag');
             body.className = ''; 
             if (t < 10) body.classList.add('weather-cold');
@@ -196,7 +211,7 @@
 
             const d = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
             document.getElementById('currentDate').innerText = `${d} | ${getRoundedTime()}`;
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Data error:", e); }
     }
 
     function updateChart(type, event) {
@@ -213,8 +228,10 @@
         const ctx = document.getElementById('weatherChart').getContext('2d');
         weatherChart = new Chart(ctx, {
             type: 'line',
-            data: { datasets: [{ borderColor: '#52a48e', backgroundColor: 'rgba(82, 164, 142, 0.1)', fill: true, tension: 0.4 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            data: { datasets: [{ borderColor: '#52a48e', backgroundColor: 'rgba(82, 164, 142, 0.1)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(0,0,0,0.05)' } } }
+            }
         });
         updateChart('temp');
     }
