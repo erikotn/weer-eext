@@ -7,6 +7,15 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-MWDKPEKGKQ');
+
+      // Functie om WhatsApp clicks te meten
+      function trackWhatsAppClick() {
+        gtag('event', 'share', {
+          'method': 'WhatsApp',
+          'content_type': 'weather_data',
+          'item_id': 'IEEXT9'
+        });
+      }
     </script>
 
     <meta charset="UTF-8">
@@ -110,7 +119,7 @@
         </details>
 
         <a href="https://www.wunderground.com/forecast/nl/eext/IEEXT9" class="action-btn" target="_blank">📅 Bekijk volledige voorspelling</a>
-        <a id="whatsappBtn" href="#" class="whatsapp-btn" target="_blank">🟢 Deel weer in Eext via WhatsApp</a>
+        <a id="whatsappBtn" href="#" class="whatsapp-btn" target="_blank" onclick="trackWhatsAppClick()">🟢 Deel weer in Eext via WhatsApp</a>
     </div>
 
     <section class="seo-footer">
@@ -187,7 +196,7 @@
             
             document.getElementById('roundedTime').innerText = getRoundedTime();
             document.getElementById('currentDate').innerText = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
-            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${encodeURIComponent('Het actuele weer in Eext: ' + t.toFixed(1) + '°C. Bekijk het live op eextweer.nl!')}`;
+            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${encodeURIComponent('Het actuele weer in Eext: ' + t.toFixed(1) + '°C. Check het live op eextweer.nl!')}`;
         } catch (e) { console.error("Fout bij ophalen:", e); }
     }
 
