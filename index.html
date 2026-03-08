@@ -29,7 +29,6 @@
             min-height: 100vh;
         }
 
-        /* Dynamische thema's op basis van temperatuur */
         .weather-cold { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
         .weather-mild { background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%); }
         .weather-warm { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); }
@@ -47,13 +46,7 @@
 
         header { border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; }
         h1 { font-size: 1.5rem; margin: 0; display: flex; align-items: center; justify-content: space-between; }
-        .live-badge { 
-            background: #ffeef0; color: #d73a49; padding: 4px 10px; 
-            border-radius: 12px; font-size: 0.7rem; font-weight: bold; 
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        .live-badge { background: #ffeef0; color: #d73a49; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
 
         .date-display { color: #57606a; font-size: 0.85rem; margin-top: 8px; }
 
@@ -68,7 +61,7 @@
             transition: all 0.2s;
         }
 
-        .stat-tile:hover { border-color: var(--accent-green); background: #fff; transform: translateY(-2px); }
+        .stat-tile:hover { border-color: var(--accent-green); background: #fff; }
         .stat-tile.active { border-color: var(--accent-green); background: #f0f9f6; }
 
         .stat-label { font-size: 0.7rem; color: #57606a; display: block; text-transform: uppercase; font-weight: 600; }
@@ -76,7 +69,7 @@
         .extremes { font-size: 0.75rem; color: #8b949e; margin-top: 4px; }
         .extremes span { font-weight: bold; color: var(--text-main); }
 
-        .chart-container { margin-top: 20px; height: 180px; }
+        .chart-container { margin-top: 20px; height: 200px; }
 
         .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
         
@@ -89,7 +82,6 @@
             padding: 14px;
             border-radius: 12px;
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(82, 164, 142, 0.2);
         }
 
         .whatsapp-btn {
@@ -119,21 +111,21 @@
         </header>
 
         <div class="grid">
-            <div class="stat-tile active" onclick="updateChart('temp', event)">
+            <div class="stat-tile active" onclick="updateView('temp', event)">
                 <span class="stat-label">🌡️ Temperatuur</span>
                 <span id="temp" class="stat-value">--.-°C</span>
                 <div class="extremes">Min: <span id="minTemp">--</span>° | Max: <span id="maxTemp">--</span>°</div>
             </div>
-            <div class="stat-tile" onclick="updateChart('wind', event)">
+            <div class="stat-tile" onclick="updateView('wind', event)">
                 <span class="stat-label">💨 Wind</span>
                 <span id="wind" class="stat-value">-- km/u</span>
                 <div class="extremes">Stoot: <span id="windGust">--</span> km/u</div>
             </div>
-            <div class="stat-tile" onclick="updateChart('hum', event)">
+            <div class="stat-tile" onclick="updateView('hum', event)">
                 <span class="stat-label">💧 Vochtigheid</span>
                 <span id="hum" class="stat-value">--%</span>
             </div>
-            <div class="stat-tile" onclick="updateChart('rain', event)">
+            <div class="stat-tile" onclick="updateView('rain', event)">
                 <span class="stat-label">🌧️ Regen</span>
                 <span id="rain" class="stat-value">-- mm</span>
             </div>
@@ -164,6 +156,7 @@
     const apiKey = 'b48a666b596749648a666b5967396428';
     const stationId = 'IEEXT9';
     let weatherChart;
+    let historyData = [];
 
     function getRoundedTime() {
         const now = new Date();
@@ -174,12 +167,12 @@
         return now.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
     }
 
-    async function fetchLive() {
+    async function fetchAllData() {
         try {
-            // 1. Haal de huidige waarden op
-            const res = await fetch(`https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
-            const data = await res.json();
-            const obs = data.observations[0];
+            // 1. Haal huidige observatie op
+            const liveRes = await fetch(`https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
+            const liveJson = await liveRes.json();
+            const obs = liveJson.observations[0];
             const t = obs.metric.temp;
 
             document.getElementById('temp').innerText = t.toFixed(1) + '°C';
@@ -187,16 +180,6 @@
             document.getElementById('windGust').innerText = obs.metric.windGust || '--';
             document.getElementById('hum').innerText = obs.humidity + '%';
             document.getElementById('rain').innerText = obs.metric.precipTotal + ' mm';
-
-            // 2. Haal de echte extremen van vandaag op (via 24u history)
-            const summaryRes = await fetch(`https://api.weather.com/v2/pws/observations/all/1day?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
-            const summaryData = await summaryRes.json();
-            
-            if (summaryData && summaryData.observations) {
-                const temps = summaryData.observations.map(o => o.metric.temp);
-                document.getElementById('maxTemp').innerText = Math.max(...temps).toFixed(1);
-                document.getElementById('minTemp').innerText = Math.min(...temps).toFixed(1);
-            }
 
             // WhatsApp link
             const msg = encodeURIComponent(`Het weer in Eext nu: het is ${t.toFixed(1)}°C. Bekijk de details op eextweer.nl!`);
@@ -211,16 +194,54 @@
 
             const d = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
             document.getElementById('currentDate').innerText = `${d} | ${getRoundedTime()}`;
+
+            // 2. Haal historie op voor extremen en grafiek
+            const histRes = await fetch(`https://api.weather.com/v2/pws/observations/all/1day?stationId=${stationId}&format=json&units=m&apiKey=${apiKey}`);
+            const histJson = await histRes.json();
+            historyData = histJson.observations || [];
+
+            if (historyData.length > 0) {
+                const temps = historyData.map(o => o.metric.temp);
+                document.getElementById('maxTemp').innerText = Math.max(...temps).toFixed(1);
+                document.getElementById('minTemp').innerText = Math.min(...temps).toFixed(1);
+                
+                // Update de grafiek met de echte temperatuurdata (standaard weergave)
+                updateChart('temp');
+            }
+
         } catch (e) { console.error("Data error:", e); }
     }
 
-    function updateChart(type, event) {
+    function updateView(type, event) {
         document.querySelectorAll('.stat-tile').forEach(t => t.classList.remove('active'));
         if(event) event.currentTarget.classList.add('active');
-        const labels = ['08:00', '10:00', '12:00', '14:00', '16:00'];
-        let d = type === 'temp' ? [5.1, 7.2, 10.4, 12.1, 11.5] : [10, 15, 20, 18, 12];
+        updateChart(type);
+    }
+
+    function updateChart(type) {
+        if (historyData.length === 0) return;
+
+        // Pak elke 6e meting om de grafiek overzichtelijk te houden (om de ~30 min bij 5 min interval)
+        const sampleData = historyData.filter((_, i) => i % 6 === 0);
+        
+        const labels = sampleData.map(o => {
+            const date = new Date(o.obsTimeLocal);
+            return date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+        });
+
+        let data = [];
+        let label = '';
+
+        switch(type) {
+            case 'temp': data = sampleData.map(o => o.metric.temp); label = 'Temp °C'; break;
+            case 'wind': data = sampleData.map(o => o.metric.windSpeed); label = 'Wind km/u'; break;
+            case 'hum': data = sampleData.map(o => o.humidity); label = 'Vochtigheid %'; break;
+            case 'rain': data = sampleData.map(o => o.metric.precipTotal); label = 'Neerslag mm'; break;
+        }
+
         weatherChart.data.labels = labels;
-        weatherChart.data.datasets[0].data = d;
+        weatherChart.data.datasets[0].data = data;
+        weatherChart.data.datasets[0].label = label;
         weatherChart.update();
     }
 
@@ -229,14 +250,21 @@
         weatherChart = new Chart(ctx, {
             type: 'line',
             data: { datasets: [{ borderColor: '#52a48e', backgroundColor: 'rgba(82, 164, 142, 0.1)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(0,0,0,0.05)' } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } },
+                scales: { 
+                    x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } }, 
+                    y: { grid: { color: 'rgba(0,0,0,0.05)' } } 
+                }
             }
         });
-        updateChart('temp');
     }
 
-    fetchLive(); initChart(); setInterval(fetchLive, 300000);
+    initChart();
+    fetchAllData();
+    setInterval(fetchAllData, 300000);
 </script>
 </body>
 </html>
